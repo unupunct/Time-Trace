@@ -1,0 +1,23 @@
+TimeTrace - privacy summary
+===========================
+
+TimeTrace measures how long each application is in the foreground on this
+computer and shows it as timelines and reports.
+
+What it records
+  - the active application (name, executable, path) and its window title
+    (window titles can be switched off)
+  - periods when you were idle (no keyboard or mouse input)
+
+What it never does
+  - no keystrokes, no mouse movement, no screenshots, no clipboard contents,
+    no microphone, no webcam
+  - no account, no cloud synchronisation, no telemetry, no uploads
+
+Your data
+  - stored locally in %LOCALAPPDATA%\TimeTrace
+  - you can pause or stop tracking at any time, exclude applications and
+    window titles, export and delete everything
+
+This installer does not start tracking and does not add TimeTrace to Windows
+startup. TimeTrace asks for your consent the first time it runs.

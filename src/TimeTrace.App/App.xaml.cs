@@ -12,7 +12,7 @@ public partial class App : Application
     public static bool IsExiting { get; private set; }
 
     private Mutex? _mutex;
-    private EventWaitHandle? _showEvent;
+    private EventWaitHandle? _showEvent, _exitEvent;
     private MainWindow? _window;
     private AppServices? _services;
     private string? _dataDirOverride;
@@ -30,12 +30,15 @@ public partial class App : Application
         var suffix = _dataDirOverride == null ? "" : "." + Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(Path.GetFullPath(_dataDirOverride).ToLowerInvariant())))[..8];
         _mutex = new Mutex(true, @"Local\TimeTrace.SingleInstance" + suffix, out bool first);
         _showEvent = new EventWaitHandle(false, EventResetMode.AutoReset, @"Local\TimeTrace.Show" + suffix);
+        _exitEvent = new EventWaitHandle(false, EventResetMode.AutoReset, @"Local\TimeTrace.Exit" + suffix);
         if (!first)
         {
-            _showEvent.Set();               // ask the running instance to come to the front
+            // "--exit" is used by the installer/uninstaller to close a running instance cleanly; otherwise just show the window
+            if (args.Contains("--exit", StringComparer.OrdinalIgnoreCase)) _exitEvent.Set(); else _showEvent.Set();
             Shutdown();
             return;
         }
+        if (args.Contains("--exit", StringComparer.OrdinalIgnoreCase)) { Shutdown(); return; }
 
         try
         {
@@ -65,6 +68,8 @@ public partial class App : Application
                 await settings.SaveAsync(settings.Current);
             }
 
+            int ti = Array.FindIndex(args, a => a.Equals("--theme", StringComparison.OrdinalIgnoreCase));
+            if (ti >= 0 && ti + 1 < args.Length && _dataDirOverride != null) { settings.Current.Theme = args[ti + 1]; settings.Current.Validate(); }
             _services.Theme.Apply(settings.Current.Theme, settings.Current.AccentColor);
 
             // first run: explicit consent before anything is tracked or added to startup
@@ -135,9 +140,11 @@ public partial class App : Application
     {
         var t = new Thread(() =>
         {
-            while (_showEvent != null && !IsExiting)
+            while (_showEvent != null && _exitEvent != null && !IsExiting)
             {
-                if (_showEvent.WaitOne(500)) Dispatcher.BeginInvoke(() => _window?.ShowAndActivate());
+                int i = WaitHandle.WaitAny(new WaitHandle[] { _showEvent, _exitEvent }, 500);
+                if (i == 0) Dispatcher.BeginInvoke(() => _window?.ShowAndActivate());
+                else if (i == 1) Dispatcher.BeginInvoke(() => _ = ExitApplicationAsync());
             }
         }) { IsBackground = true, Name = "ShowRequestListener" };
         t.Start();

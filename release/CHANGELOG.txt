@@ -1,0 +1,18 @@
+TimeTrace changelog
+===================
+
+1.0.0 - 2026-11-13
+  First public release.
+  - Foreground-application tracking with idle detection (GetLastInputInfo),
+    monotonic-clock durations, sleep/resume, lock and logoff handling,
+    crash recovery of open sessions.
+  - SQLite storage with migrations, backup and restore.
+  - Dashboard, interactive 24-hour and weekly timeline, application explorer
+    with detail pages, categories and classification rules.
+  - Reports (daily, weekly, monthly, custom, application, category) as CSV,
+    JSON and HTML; full personal data export.
+  - Privacy controls: pause/stop/disable, exclusions by application, path and
+    window title, selective and complete deletion, retention period.
+  - System tray, optional notifications, optional start with Windows.
+  - Dark and light themes with configurable accent colour.
+  - Single-file, self-contained TimeTrace.exe and Inno Setup installer.

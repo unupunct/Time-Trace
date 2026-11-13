@@ -562,3 +562,47 @@ public class SettingsTests
         Assert.Equal(new[] { "re:^secret" }, back.ExcludedTitleRules);
     }
 }
+
+[Trait("Category", "Performance")]
+public class PerformanceTests
+{
+    [Fact]
+    public async Task Large_history_loads_and_summarises_quickly()
+    {
+        using var t = new TempDb();
+        var start = new DateTime(2026, 1, 1, 8, 0, 0, DateTimeKind.Utc);
+        var apps = new List<AppRecord>();
+        for (int i = 0; i < 40; i++)
+            apps.Add(await t.Repo.AddApplicationAsync(new AppRecord { Name = "App" + i, ExecutableName = $"app{i}.exe", FirstSeen = start, LastSeen = start }));
+
+        // ~60,000 sessions (about 8 months of heavy use) written in one transaction-sized batch through the repository
+        using (var c = t.Db.Open())
+        using (var tx = c.BeginTransaction())
+        {
+            using var cmd = c.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = "INSERT INTO ActivitySessions(ApplicationId,ProcessId,WindowTitle,StartTimeUtc,EndTimeUtc,DurationSeconds,SessionType,IsOpen) VALUES($a,1,'t',$s,$e,300,0,0)";
+            var pa = cmd.Parameters.Add("$a", SqliteType.Integer); var ps = cmd.Parameters.Add("$s", SqliteType.Text); var pe = cmd.Parameters.Add("$e", SqliteType.Text);
+            for (int i = 0; i < 60_000; i++)
+            {
+                var s = start.AddMinutes(i * 5);
+                pa.Value = apps[i % apps.Count].Id; ps.Value = s.ToString("o"); pe.Value = s.AddMinutes(5).ToString("o");
+                cmd.ExecuteNonQuery();
+            }
+            tx.Commit();
+        }
+
+        var range = new DateRange(start.Date, start.Date.AddDays(90));
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var sessions = await t.Repo.GetSessionsAsync(range.FromUtc, range.ToUtc);
+        var loadMs = sw.ElapsedMilliseconds;
+        sw.Restart();
+        var summary = AnalyticsEngine.Summarize(sessions, await t.Repo.GetApplicationsAsync(), await t.Repo.GetCategoriesAsync(), range, TimeZoneInfo.Utc, false, range.ToUtc);
+        var analyseMs = sw.ElapsedMilliseconds;
+
+        Assert.True(sessions.Count > 20_000);
+        Assert.Equal(90, summary.Daily.Count);
+        Assert.True(loadMs < 5000, $"loading took {loadMs} ms");
+        Assert.True(analyseMs < 5000, $"analytics took {analyseMs} ms");
+    }
+}
