@@ -1,0 +1,97 @@
+<UserControl x:Class="TimeTrace.App.Views.TimelineView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:TimeTrace.App.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,16,24">
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Timeline" Style="{StaticResource H1}"/>
+                    <TextBlock Text="{Binding SummaryText}" Style="{StaticResource Muted}" Margin="0,2,0,0"/>
+                </StackPanel>
+                <Border Grid.Column="1" Background="{DynamicResource Surface2Brush}" CornerRadius="9" Padding="3" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Style="{StaticResource SegmentButton}" Content="Daily" GroupName="tlmode" IsChecked="{Binding IsWeekly, Converter={StaticResource InvBool}, Mode=OneWay}" Checked="OnDaily"/>
+                        <RadioButton Style="{StaticResource SegmentButton}" Content="Weekly" GroupName="tlmode" IsChecked="{Binding IsWeekly, Mode=OneWay}" Checked="OnWeekly"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Navigation, zoom and filters -->
+            <Border Style="{StaticResource Card}" Padding="12,10" Margin="0,0,0,14">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource IconButton}" Content="&#xE76B;" Command="{Binding PreviousCommand}" ToolTip="Previous"/>
+                        <DatePicker SelectedDate="{Binding SelectedDate}" Width="140" VerticalAlignment="Center"/>
+                        <Button Style="{StaticResource IconButton}" Content="&#xE76C;" Command="{Binding NextCommand}" ToolTip="Next" Margin="4,0,0,0"/>
+                        <Button Content="Today" Command="{Binding TodayCommand}" Margin="8,0,16,0"/>
+                        <TextBlock Text="{Binding DateLabel}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Style="{StaticResource IconButton}" Content="&#xE71F;" Command="{Binding ZoomOutCommand}" ToolTip="Zoom out"/>
+                        <Slider Minimum="18" Maximum="240" Value="{Binding PixelsPerHour}" Width="100" VerticalAlignment="Center"/>
+                        <Button Style="{StaticResource IconButton}" Content="&#xE8A3;" Command="{Binding ZoomInCommand}" ToolTip="Zoom in" Margin="4,0,0,0"/>
+                        <Button Style="{StaticResource GhostButton}" Content="Reset" Command="{Binding ResetZoomCommand}" Margin="0,0,12,0"/>
+                        <ComboBox ItemsSource="{Binding AppFilters}" SelectedItem="{Binding SelectedApp}" Width="170" Margin="0,0,8,0"/>
+                        <ComboBox ItemsSource="{Binding CategoryFilters}" SelectedItem="{Binding SelectedCategory}" Width="150"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 24 hour timeline -->
+            <Border Style="{StaticResource Card}" Padding="8,8,8,4" Margin="0,0,0,14">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" PreviewMouseWheel="OnTimelineWheel">
+                    <c:TimelineChart x:Name="Chart" Rows="{Binding Rows}" PixelsPerHour="{Binding PixelsPerHour}" SelectedSessionId="{Binding SelectedId}" BlockClicked="OnBlockClicked"/>
+                </ScrollViewer>
+            </Border>
+            <TextBlock Style="{StaticResource Muted}" Margin="4,-6,0,12" Text="Each block is one session in one application; dim blocks are idle periods. Hover for details, click to open. Ctrl + mouse wheel zooms. The dashed line marks the current time."/>
+
+            <!-- Session details -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14" Visibility="{Binding Selected, Converter={StaticResource NullVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Border Width="8" Background="{Binding Selected.ColorHex, Converter={StaticResource HexBrush}}" CornerRadius="4" Margin="0,0,14,0"/>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding Selected.DisplayName}" Style="{StaticResource H2}"/>
+                        <TextBlock Text="{Binding Selected.DisplayTitle}" Style="{StaticResource Muted}" Margin="0,2,0,8" TextWrapping="Wrap"/>
+                        <WrapPanel>
+                            <TextBlock Margin="0,0,24,0"><Run Text="When  " Foreground="{DynamicResource MutedBrush}"/><Run Text="{Binding Selected.DateText, Mode=OneWay}"/><Run Text=" "/><Run Text="{Binding Selected.TimeRange, Mode=OneWay}"/></TextBlock>
+                            <TextBlock Margin="0,0,24,0"><Run Text="Duration  " Foreground="{DynamicResource MutedBrush}"/><Run Text="{Binding Selected.DurationText, Mode=OneWay}"/></TextBlock>
+                            <TextBlock Margin="0,0,24,0" Visibility="{Binding Selected.CategoryName, Converter={StaticResource NullVis}}"><Run Text="Category  " Foreground="{DynamicResource MutedBrush}"/><Run Text="{Binding Selected.CategoryName, Mode=OneWay}"/></TextBlock>
+                            <TextBlock Margin="0,0,24,0" Visibility="{Binding Selected.Executable, Converter={StaticResource NullVis}}"><Run Text="Executable  " Foreground="{DynamicResource MutedBrush}"/><Run Text="{Binding Selected.Executable, Mode=OneWay}"/></TextBlock>
+                        </WrapPanel>
+                        <TextBlock Text="{Binding Selected.ExecutablePath}" Style="{StaticResource Muted}" Margin="0,6,0,0" Visibility="{Binding Selected.ExecutablePath, Converter={StaticResource NullVis}}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                        <Button Content="Exclude app" Command="{Binding ExcludeAppCommand}" Visibility="{Binding Selected.AppId, Converter={StaticResource NullVis}}"/>
+                        <Button Content="Delete session" Style="{StaticResource DangerButton}" Command="{Binding DeleteSessionCommand}"/>
+                        <Button Style="{StaticResource IconButton}" Content="&#xE711;" Command="{Binding ClearSelectionCommand}" ToolTip="Close"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Activity list -->
+            <TextBlock Text="Activity list" Style="{StaticResource H2}" Margin="0,4,0,8"/>
+            <Border Style="{StaticResource Card}" Padding="0">
+                <DataGrid ItemsSource="{Binding Activities}" SelectedItem="{Binding Selected, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True"
+                          HeadersVisibility="Column" GridLinesVisibility="None" Background="Transparent" BorderThickness="0" MaxHeight="420" MinHeight="120"
+                          RowHeight="34" SelectionMode="Single" CanUserAddRows="False" CanUserResizeRows="False">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="" Width="34">
+                            <DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                <Ellipse Width="10" Height="10" Fill="{Binding ColorHex, Converter={StaticResource HexBrush}}" HorizontalAlignment="Center"/>
+                            </DataTemplate></DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Time" Binding="{Binding TimeRange}" Width="140" SortMemberPath="StartUtc"/>
+                        <DataGridTextColumn Header="Application" Binding="{Binding DisplayName}" Width="190"/>
+                        <DataGridTextColumn Header="Window title" Binding="{Binding DisplayTitle}" Width="*"/>
+                        <DataGridTextColumn Header="Category" Binding="{Binding CategoryName}" Width="120"/>
+                        <DataGridTextColumn Header="Duration" Binding="{Binding DurationText}" Width="90" SortMemberPath="DurationSeconds"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

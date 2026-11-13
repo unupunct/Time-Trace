@@ -42,6 +42,8 @@ public interface IActivityRepository
     Task<AppRecord?> GetApplicationAsync(int id, CancellationToken ct = default);
     Task<AppRecord> AddApplicationAsync(AppRecord app, CancellationToken ct = default);
     Task UpdateApplicationAsync(AppRecord app, CancellationToken ct = default);
+    /// <summary>Updates only observed facts (path, last seen); never overwrites user edits such as category or exclusion.</summary>
+    Task TouchApplicationAsync(int id, string? executablePath, DateTime lastSeenUtc, CancellationToken ct = default);
     Task<IReadOnlyList<AppRecord>> GetApplicationsAsync(CancellationToken ct = default);
     Task DeleteApplicationAsync(int id, CancellationToken ct = default);
 

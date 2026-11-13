@@ -388,11 +388,24 @@ public sealed class TrackingEngine
 
     private async Task RefreshAppMetadataAsync(AppRecord app, ForegroundWindowInfo fg)
     {
-        bool dirty = false;
-        if (fg.ExecutablePath != null && !string.Equals(app.ExecutablePath, fg.ExecutablePath, StringComparison.OrdinalIgnoreCase))
-        { app.ExecutablePath = fg.ExecutablePath; dirty = true; }
         app.LastSeen = _clock.UtcNow;
-        if (dirty) await SafeAsync(async () => { await _repo.UpdateApplicationAsync(app); return 0; }, 0);
+        if (app.Id == 0) return;
+        var path = fg.ExecutablePath;
+        if (path != null && !string.Equals(app.ExecutablePath, path, StringComparison.OrdinalIgnoreCase))
+        {
+            app.ExecutablePath = path;
+            await SafeAsync(async () => { await _repo.TouchApplicationAsync(app.Id, path, app.LastSeen); return 0; }, 0);
+        }
+    }
+
+    /// <summary>Snapshot of the sessions currently being tracked in memory (including the not-yet-checkpointed tail).</summary>
+    public IReadOnlyList<ActivitySession> GetLiveSessions()
+    {
+        var now = _clock.MonotonicMilliseconds;
+        var list = new List<ActivitySession>();
+        foreach (var s in new[] { _active, _idleSession })
+            if (s != null && s.DbId != 0) list.Add(ToRow(s, now, open: true));
+        return list;
     }
 
     private ActivitySession ToRow(Live s, long endMono, bool open)
@@ -457,7 +470,7 @@ public sealed class TrackingEngine
         {
             s.App.LastSeen = row.EndTimeUtc;
             var app = s.App;
-            await SafeAsync(async () => { await _repo.UpdateApplicationAsync(app); return 0; }, 0);
+            if (app.Id != 0) await SafeAsync(async () => { await _repo.TouchApplicationAsync(app.Id, null, row.EndTimeUtc); return 0; }, 0);
         }
         SessionPersisted?.Invoke();
     }

@@ -56,6 +56,7 @@ public sealed class FakeRepository : IActivityRepository
         app.Id = ++_appId; Apps.Add(app); return Task.FromResult(app);
     }
     public Task UpdateApplicationAsync(AppRecord app, CancellationToken ct = default) => Task.CompletedTask;
+    public Task TouchApplicationAsync(int id, string? path, DateTime lastSeenUtc, CancellationToken ct = default) => Task.CompletedTask;
     public Task<IReadOnlyList<AppRecord>> GetApplicationsAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<AppRecord>>(Apps.ToList());
     public Task DeleteApplicationAsync(int id, CancellationToken ct = default) { Apps.RemoveAll(a => a.Id == id); return Task.CompletedTask; }
 

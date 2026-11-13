@@ -1,22 +1,45 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AssemblyName>TimeTrace</AssemblyName>
+    <RootNamespace>TimeTrace.App</RootNamespace>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ApplicationIcon>Assets\TimeTrace.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <NoWarn>$(NoWarn);WPF0001</NoWarn>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <AssemblyTitle>TimeTrace</AssemblyTitle>
+    <Description>Understand where your time goes.</Description>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <InformationalVersion>1.0.0</InformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="System" />
+    <Using Include="System.Collections.Generic" />
+    <Using Include="System.IO" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Threading" />
+    <Using Include="System.Threading.Tasks" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\TimeTrace.Core\TimeTrace.Core.csproj" />
     <ProjectReference Include="..\TimeTrace.Data\TimeTrace.Data.csproj" />
     <ProjectReference Include="..\TimeTrace.Windows\TimeTrace.Windows.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Assets\TimeTrace.ico" />
+    <Resource Include="Assets\TimeTrace.png" />
+    <EmbeddedResource Include="..\..\LICENSE.txt" LogicalName="LICENSE.txt" />
+  </ItemGroup>
 
 </Project>

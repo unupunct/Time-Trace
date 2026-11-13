@@ -1,0 +1,106 @@
+<UserControl x:Class="TimeTrace.App.Views.CategoriesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,16,24">
+            <TextBlock Text="Categories" Style="{StaticResource H1}"/>
+            <TextBlock Style="{StaticResource Muted}" Margin="0,2,0,16"
+                       Text="Categories are your own labels for grouping applications. They are not an objective measure of productivity: the same application can be work for one person and leisure for another."/>
+
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" MinWidth="300"/><ColumnDefinition Width="1.3*"/></Grid.ColumnDefinitions>
+
+                <!-- list -->
+                <Border Style="{StaticResource Card}" Margin="0,0,16,16" Padding="12">
+                    <StackPanel>
+                        <Grid Margin="4,0,4,10">
+                            <TextBlock Text="Your categories" Style="{StaticResource H2}" VerticalAlignment="Center"/>
+                            <Button Content="+ New category" HorizontalAlignment="Right" Command="{Binding NewCategoryCommand}" Margin="0"/>
+                        </Grid>
+                        <ListBox ItemsSource="{Binding Categories}" SelectedItem="{Binding Selected}" Background="Transparent" BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="2,6">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <Border Width="14" Height="14" CornerRadius="7" Background="{Binding Color, Converter={StaticResource HexBrush}}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="12,0" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding CountText}" Style="{StaticResource Muted}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
+
+                <!-- editor -->
+                <Border Grid.Column="1" Style="{StaticResource Card}" Margin="0,0,0,16" Visibility="{Binding HasSelection, Converter={StaticResource BoolVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Edit category" Style="{StaticResource H2}" Margin="0,0,0,12"/>
+                        <TextBlock Text="Name" Style="{StaticResource Muted}" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}" MaxLength="40"/>
+                        <TextBlock Text="Description" Style="{StaticResource Muted}" Margin="0,12,0,4"/>
+                        <TextBox Text="{Binding EditDescription, UpdateSourceTrigger=PropertyChanged}" MaxLength="120"/>
+                        <TextBlock Text="Colour" Style="{StaticResource Muted}" Margin="0,12,0,6"/>
+                        <ItemsControl ItemsSource="{Binding Palette}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource ColorSwatch}" Background="{Binding Converter={StaticResource HexBrush}}"
+                                            Command="{Binding DataContext.PickColorCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" ToolTip="{Binding}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <Border Width="28" Height="28" CornerRadius="14" Background="{Binding EditColor, Converter={StaticResource HexBrush}}" Margin="0,0,10,0"/>
+                            <TextBox Text="{Binding EditColor, UpdateSourceTrigger=PropertyChanged}" Width="120" MaxLength="7"/>
+                            <TextBlock Text="hex, e.g. #3DDC84" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                            <Button Style="{StaticResource PrimaryButton}" Content="Save changes" Command="{Binding SaveCommand}"/>
+                            <Button Style="{StaticResource DangerButton}" Content="Delete category" Command="{Binding DeleteCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+            <TextBlock Text="{Binding Message}" Foreground="{DynamicResource AccentBrush}" Margin="0,-6,0,12" Visibility="{Binding Message, Converter={StaticResource NullVis}}" TextWrapping="Wrap"/>
+
+            <!-- rules -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Classification rules" Style="{StaticResource H2}"/>
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,2,0,12"
+                               Text="New applications are classified automatically by the first matching rule. Applications you categorise by hand are never changed by rules."/>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/><ColumnDefinition Width="170"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <ComboBox ItemsSource="{Binding RuleTypes}" SelectedItem="{Binding NewRuleType}" DisplayMemberPath="Label" Margin="0,0,8,0"/>
+                        <TextBox Grid.Column="1" Text="{Binding NewPattern, UpdateSourceTrigger=PropertyChanged}" Tag="e.g. code.exe  or  \Games\" Margin="0,0,8,0"/>
+                        <ComboBox Grid.Column="2" ItemsSource="{Binding CategoryList}" SelectedItem="{Binding NewRuleCategory}" DisplayMemberPath="Name" Margin="0,0,8,0"/>
+                        <Button Grid.Column="3" Content="Add rule" Style="{StaticResource PrimaryButton}" Command="{Binding AddRuleCommand}" Margin="0"/>
+                    </Grid>
+                    <Button Content="Apply rules to unclassified applications" Command="{Binding ApplyRulesCommand}" HorizontalAlignment="Left" Margin="0,0,0,12"/>
+                    <Border BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="8" MaxHeight="360">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Rules}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="12,6">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding TypeText}" Style="{StaticResource Muted}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Pattern}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="12,0">
+                                                <Ellipse Width="9" Height="9" Fill="{Binding ColorHex, Converter={StaticResource HexBrush}}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CategoryName}" Margin="6,0,0,0" Foreground="{DynamicResource MutedBrush}"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="3" Style="{StaticResource IconButton}" Content="&#xE74D;" ToolTip="Delete rule" Margin="0"
+                                                    Command="{Binding DataContext.DeleteRuleCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

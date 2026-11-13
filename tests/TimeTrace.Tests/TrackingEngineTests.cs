@@ -418,6 +418,7 @@ public class TrackingEngineTests
         public Task<AppRecord?> GetApplicationAsync(int id, CancellationToken ct = default) => Boom<Task<AppRecord?>>();
         public Task<AppRecord> AddApplicationAsync(AppRecord a, CancellationToken ct = default) => Boom<Task<AppRecord>>();
         public Task UpdateApplicationAsync(AppRecord a, CancellationToken ct = default) => Boom<Task>();
+        public Task TouchApplicationAsync(int id, string? p, DateTime l, CancellationToken ct = default) => Boom<Task>();
         public Task<IReadOnlyList<AppRecord>> GetApplicationsAsync(CancellationToken ct = default) => Boom<Task<IReadOnlyList<AppRecord>>>();
         public Task DeleteApplicationAsync(int id, CancellationToken ct = default) => Boom<Task>();
         public Task<long> InsertSessionAsync(ActivitySession s, CancellationToken ct = default) => Boom<Task<long>>();

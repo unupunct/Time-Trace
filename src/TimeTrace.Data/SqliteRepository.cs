@@ -84,6 +84,14 @@ public sealed class SqliteRepository : IActivityRepository, ICategoryRepository,
             return cmd.ExecuteNonQuery();
         }, ct);
 
+    public Task TouchApplicationAsync(int id, string? executablePath, DateTime lastSeenUtc, CancellationToken ct = default) =>
+        Run(c =>
+        {
+            using var cmd = Cmd(c, "UPDATE Applications SET ExecutablePath=COALESCE($p,ExecutablePath), LastSeen=MAX(LastSeen,$l) WHERE Id=$i",
+                ("$p", executablePath), ("$l", Ts(lastSeenUtc)), ("$i", id));
+            return cmd.ExecuteNonQuery();
+        }, ct);
+
     public Task<IReadOnlyList<AppRecord>> GetApplicationsAsync(CancellationToken ct = default) =>
         Run<IReadOnlyList<AppRecord>>(c =>
         {

@@ -1,0 +1,181 @@
+<UserControl x:Class="TimeTrace.App.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:TimeTrace.App.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,16,24">
+            <!-- Header -->
+            <Grid Margin="0,0,0,6">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Dashboard" Style="{StaticResource H1}"/>
+                    <TextBlock Text="{Binding RangeLabel}" Style="{StaticResource Muted}" Margin="0,2,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsCustom, Converter={StaticResource BoolVis}}" Margin="0,0,10,0">
+                        <DatePicker SelectedDate="{Binding CustomFrom}" Width="130"/>
+                        <TextBlock Text="–" VerticalAlignment="Center" Margin="6,0"/>
+                        <DatePicker SelectedDate="{Binding CustomTo}" Width="130"/>
+                    </StackPanel>
+                    <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" DisplayMemberPath="Label" Width="160"/>
+                </StackPanel>
+            </Grid>
+            <TextBlock Text="{Binding TrackedNote}" Style="{StaticResource Muted}" Margin="0,0,0,12" Visibility="{Binding TrackedNote, Converter={StaticResource NullVis}}"/>
+
+            <!-- Top statistics -->
+            <Grid Margin="0,8,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition Width="1.35*"/><ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource Card}" Margin="0,0,10,0"><StackPanel>
+                    <TextBlock Text="{Binding TrackedLabel}" Style="{StaticResource Muted}"/>
+                    <TextBlock Text="{Binding TotalTracked}" Style="{StaticResource StatValue}" Margin="0,6,0,0" Foreground="{DynamicResource AccentBrush}"/></StackPanel></Border>
+                <Border Grid.Column="1" Style="{StaticResource Card}" Margin="0,0,10,0"><StackPanel>
+                    <TextBlock Text="Active time" Style="{StaticResource Muted}"/>
+                    <TextBlock Text="{Binding ActiveTime}" Style="{StaticResource StatValue}" Margin="0,6,0,0"/></StackPanel></Border>
+                <Border Grid.Column="2" Style="{StaticResource Card}" Margin="0,0,10,0"><StackPanel>
+                    <TextBlock Text="Idle time" Style="{StaticResource Muted}"/>
+                    <TextBlock Text="{Binding IdleTime}" Style="{StaticResource StatValue}" Margin="0,6,0,0"/></StackPanel></Border>
+                <Border Grid.Column="3" Style="{StaticResource Card}" Margin="0,0,10,0"><StackPanel>
+                    <TextBlock Text="Applications used" Style="{StaticResource Muted}"/>
+                    <TextBlock Text="{Binding AppsUsed}" Style="{StaticResource StatValue}" Margin="0,6,0,0"/></StackPanel></Border>
+                <Border Grid.Column="4" Style="{StaticResource Card}" Margin="0,0,10,0"><StackPanel>
+                    <TextBlock Text="Most-used application" Style="{StaticResource Muted}"/>
+                    <TextBlock Text="{Binding MostUsed}" Style="{StaticResource StatValue}" FontSize="19" Margin="0,8,0,0" ToolTip="{Binding MostUsed}"/>
+                    <TextBlock Text="{Binding MostUsedDetail}" Style="{StaticResource Muted}"/></StackPanel></Border>
+                <Border Grid.Column="5" Style="{StaticResource Card}"><StackPanel>
+                    <TextBlock Text="Avg. session" Style="{StaticResource Muted}"/>
+                    <TextBlock Text="{Binding AvgSession}" Style="{StaticResource StatValue}" Margin="0,6,0,0"/></StackPanel></Border>
+            </Grid>
+
+            <!-- Activity chart + distribution -->
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="1.7*"/><ColumnDefinition Width="*" MinWidth="300"/></Grid.ColumnDefinitions>
+                <Border Style="{StaticResource Card}" Margin="0,0,16,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding ChartTitle}" Style="{StaticResource H2}"/>
+                        <TextBlock Text="Time with keyboard or mouse activity attributed to an application" Style="{StaticResource Muted}" Margin="0,2,0,8"/>
+                        <c:BarChart Items="{Binding Bars}" Height="230"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Application usage" Style="{StaticResource H2}"/>
+                        <c:DonutChart Items="{Binding AppSlices}" CenterTitle="{Binding DonutTitle}" CenterSubtitle="{Binding DonutSubtitle}" Height="170" Margin="0,8"/>
+                        <ItemsControl ItemsSource="{Binding AppLegend}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <Ellipse Width="9" Height="9" Fill="{Binding ColorHex, Converter={StaticResource HexBrush}}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Label}" Margin="8,0" TextTrimming="CharacterEllipsis" FontSize="12"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding ValueText}" Style="{StaticResource Muted}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Top applications -->
+            <TextBlock Text="Top applications" Style="{StaticResource H2}" Margin="0,4,0,10"/>
+            <TextBlock Text="No application usage recorded for this period yet." Style="{StaticResource Muted}" Margin="0,0,0,16"
+                       Visibility="{Binding HasData, Converter={StaticResource InvBool}}"/>
+            <ItemsControl ItemsSource="{Binding TopApps}" Margin="0,0,0,8">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Margin="0,0,10,10" Padding="14">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Grid Width="40" Height="40" VerticalAlignment="Top">
+                                    <TextBlock Text="&#xE74C;" FontFamily="{StaticResource IconFont}" FontSize="26" Foreground="{DynamicResource FaintBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Image Source="{Binding IconPath, Converter={StaticResource IconPath}}" Width="32" Height="32" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                </Grid>
+                                <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding TimeText}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="8,0,0,0"/>
+                                    </Grid>
+                                    <ProgressBar Value="{Binding Percent, Mode=OneWay}" Style="{StaticResource ProgressTrack}" Margin="0,8,0,6"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="8" Height="8" Fill="{Binding ColorHex, Converter={StaticResource HexBrush}}" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding CategoryName}" Style="{StaticResource Muted}" Margin="6,0,0,0"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Style="{StaticResource Muted}">
+                                            <Run Text="{Binding PercentText, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding SessionsText, Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Heatmap + categories -->
+            <Grid Margin="0,8,0,16">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="1.7*"/><ColumnDefinition Width="*" MinWidth="300"/></Grid.ColumnDefinitions>
+                <Border Style="{StaticResource Card}" Margin="0,0,16,0">
+                    <StackPanel>
+                        <TextBlock Text="Hourly activity heatmap" Style="{StaticResource H2}"/>
+                        <TextBlock Text="Brighter cells mean more active time in that weekday and hour" Style="{StaticResource Muted}" Margin="0,2,0,10"/>
+                        <c:HeatmapChart Data="{Binding Heatmap}" Height="210"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Category distribution" Style="{StaticResource H2}"/>
+                        <TextBlock Text="Categories are your own classifications, not a productivity score" Style="{StaticResource Muted}" Margin="0,2,0,0"/>
+                        <c:DonutChart Items="{Binding CategorySlices}" CenterTitle="{Binding CategoryDonutTitle}" CenterSubtitle="top category" Height="160" Margin="0,8"/>
+                        <ItemsControl ItemsSource="{Binding CategoryLegend}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <Ellipse Width="9" Height="9" Fill="{Binding ColorHex, Converter={StaticResource HexBrush}}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Label}" Margin="8,0" FontSize="12"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding ValueText}" Style="{StaticResource Muted}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Recent activity -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Recent activity" Style="{StaticResource H2}" Margin="0,0,0,10"/>
+                    <TextBlock Text="Nothing recorded yet." Style="{StaticResource Muted}" Visibility="{Binding HasData, Converter={StaticResource InvBool}}"/>
+                    <ItemsControl ItemsSource="{Binding Recent}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,0" MinHeight="40">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="64"/><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding StartText}" Style="{StaticResource Muted}" VerticalAlignment="Center"/>
+                                    <Grid Grid.Column="1">
+                                        <Rectangle Width="2" Fill="{DynamicResource LineBrush}" HorizontalAlignment="Center"/>
+                                        <Ellipse Width="10" Height="10" Fill="{Binding ColorHex, Converter={StaticResource HexBrush}}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <StackPanel Grid.Column="2" Margin="8,4" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding DisplayTitle}" Style="{StaticResource Muted}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="3" Text="{Binding DurationText}" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,9 +1,19 @@
-﻿<Application x:Class="TimeTrace.App.App"
+<Application x:Class="TimeTrace.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:TimeTrace.App"
-             StartupUri="MainWindow.xaml">
+             xmlns:c="clr-namespace:TimeTrace.App.Controls"
+             ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <c:HexBrushConverter x:Key="HexBrush"/>
+            <c:IconPathConverter x:Key="IconPath"/>
+            <c:NullToVisibilityConverter x:Key="NullVis"/>
+            <c:InverseBoolConverter x:Key="InvBool"/>
+            <c:ResourceKeyBrushConverter x:Key="KeyBrush"/>
+            <BooleanToVisibilityConverter x:Key="BoolVis"/>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

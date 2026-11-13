@@ -1,12 +1,87 @@
-﻿<Window x:Class="TimeTrace.App.MainWindow"
+<Window x:Class="TimeTrace.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:TimeTrace.App"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        xmlns:vm="clr-namespace:TimeTrace.App.ViewModels"
+        xmlns:v="clr-namespace:TimeTrace.App.Views"
+        Title="TimeTrace" Width="1360" Height="860" MinWidth="1080" MinHeight="640"
+        Icon="Assets/TimeTrace.ico"
+        Background="{DynamicResource BgBrush}" Foreground="{DynamicResource TextBrush}"
+        FontFamily="Segoe UI Variable, Segoe UI" FontSize="13"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}"><v:DashboardView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TimelineViewModel}"><v:TimelineView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ApplicationsViewModel}"><v:ApplicationsView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ReportsViewModel}"><v:ReportsView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CategoriesViewModel}"><v:CategoriesView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}"><v:SettingsView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AboutViewModel}"><v:AboutView/></DataTemplate>
+    </Window.Resources>
 
+    <Grid Background="{DynamicResource BgBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="236"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar -->
+        <Border Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0">
+            <DockPanel Margin="14,18,14,16">
+                <!-- Tracking status (always visible) -->
+                <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Padding="14" Background="{DynamicResource SurfaceBrush}"
+                        Visibility="{Binding ShowIndicator, Converter={StaticResource BoolVis}}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="10" Height="10" Fill="{Binding StatusBrushKey, Converter={StaticResource KeyBrush}}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold" Margin="8,0,0,0" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding StatusDetail}" Style="{StaticResource Muted}" Margin="18,3,0,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
+                                   Visibility="{Binding StatusDetail, Converter={StaticResource NullVis}}"/>
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                            <Button Content="{Binding PauseText}" Command="{Binding TogglePauseCommand}" IsEnabled="{Binding CanPause}" Margin="0,0,4,0" Padding="6,7"/>
+                            <Button Grid.Column="1" Content="{Binding StartStopText}" Command="{Binding ToggleStartStopCommand}" IsEnabled="{Binding CanStartStop}" Margin="4,0,0,0" Padding="6,7"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                <Border DockPanel.Dock="Bottom" Margin="0,0,0,12" Visibility="{Binding ShowIndicator, Converter={StaticResource InvBool}}">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Ellipse Width="8" Height="8" Fill="{Binding StatusBrushKey, Converter={StaticResource KeyBrush}}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding StatusText}" Style="{StaticResource Muted}" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="6,0,0,22">
+                    <Image Source="Assets/TimeTrace.png" Width="38" Height="38"/>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="TimeTrace" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock Text="Understand where your time goes." Style="{StaticResource Muted}" FontSize="10.5" TextWrapping="Wrap" MaxWidth="130"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <ItemsControl ItemsSource="{Binding NavItems}" VerticalAlignment="Top">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton Style="{StaticResource NavButton}" Content="{Binding Label}" Tag="{Binding Glyph}" GroupName="nav"
+                                         IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                         Command="{Binding DataContext.NavigateToCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                         CommandParameter="{Binding Key}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+        </Border>
+
+        <!-- Content -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <Border Background="{DynamicResource WarnBrush}" Padding="16,8" Visibility="{Binding Banner, Converter={StaticResource NullVis}}">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="Dismiss" Command="{Binding DismissBannerCommand}" Padding="10,3" Margin="12,0,0,0"/>
+                    <TextBlock Text="{Binding Banner}" Foreground="Black" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                </DockPanel>
+            </Border>
+            <ContentPresenter Grid.Row="1" Content="{Binding CurrentPage}" Margin="28,22,12,0"/>
+        </Grid>
     </Grid>
 </Window>

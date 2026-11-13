@@ -7,6 +7,8 @@ namespace TimeTrace.Core.Settings;
 public sealed class AppSettings
 {
     // General
+    /// <summary>False until the user has seen the first-run privacy notice and chosen whether tracking may start.</summary>
+    public bool FirstRunCompleted { get; set; }
     public bool StartWithWindows { get; set; }
     public bool StartMinimized { get; set; }
     public bool MinimizeToTray { get; set; } = true;
