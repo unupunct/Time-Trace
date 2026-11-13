@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Version>1.0.0</Version>
+    <Authors>TimeTrace contributors</Authors>
+    <Company>TimeTrace</Company>
+    <Product>TimeTrace</Product>
+    <Copyright>Copyright (c) 2026 TimeTrace contributors</Copyright>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>
